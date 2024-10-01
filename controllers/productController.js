@@ -83,7 +83,11 @@ exports.updateProductBySku = async (req, res) => {
 // Get a single Product by URI
 exports.getProductByUri = async (req, res) => {
   try {
-    const product = await Product.findOne({ uri: req.params.uri })
+    const product = await Product.findOneAndUpdate(
+      { uri: req.params.uri },
+      { $inc: { view_count: 1 } }, // Увеличить view_count на 1
+      { new: true }
+    )
       .populate("color")
       .populate("categories")
       .populate("short_description")
