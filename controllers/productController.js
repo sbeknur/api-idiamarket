@@ -171,6 +171,11 @@ exports.searchProducts = async (req, res) => {
       return res.status(400).send({ error: "Search query is required." });
     }
 
+    // Get page and limit from query parameters with defaults
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const skip = (page - 1) * limit;
+
     // Perform the search using a regular expression for partial matching
     const products = await Product.find({
       title: { $regex: searchQuery, $options: "i" }, // 'i' makes the search case-insensitive
@@ -182,14 +187,32 @@ exports.searchProducts = async (req, res) => {
       .populate("attributes.items")
       .populate("variants.attributes")
       .populate("stickers")
-      .populate("meta_data");
+      .populate("meta_data")
+      .skip(skip) // Apply skip for pagination
+      .limit(limit); // Apply limit for pagination
+
+    // Count total products for pagination
+    const totalProducts = await Product.countDocuments({
+      title: { $regex: searchQuery, $options: "i" },
+    });
+
+    const totalPages = Math.ceil(totalProducts / limit);
 
     if (!products || products.length === 0) {
       console.log("No products found for query:", searchQuery);
       return res.status(404).send({ error: "No products found for this search query." });
     }
 
-    res.send(products);
+    // Send the response with products and pagination details
+    res.send({
+      products,
+      pagination: {
+        totalProducts,
+        totalPages,
+        currentPage: page,
+        pageSize: limit,
+      },
+    });
   } catch (error) {
     console.error("Error during search:", error);
     res.status(500).send({ error: error.message });
