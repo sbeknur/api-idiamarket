@@ -180,20 +180,88 @@ exports.searchProducts = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 20;
     const skip = (page - 1) * limit;
 
-    // Perform the search using a regular expression for partial matching
-    const products = await Product.find({
-      title: { $regex: searchQuery, $options: "i" }, // 'i' makes the search case-insensitive
-    })
-      .populate("color")
-      .populate("categories")
-      .populate("short_description")
-      .populate("attributes")
-      .populate("attributes.items")
-      .populate("variants.attributes")
-      .populate("stickers")
-      .populate("meta_data")
-      .skip(skip) // Apply skip for pagination
-      .limit(limit); // Apply limit for pagination
+    // Initialize sort options with a default value
+    let sortOptions = { view_count: -1 };
+
+    switch (req.query.sorting) {
+      case "popular":
+        sortOptions = { view_count: -1 };
+        break;
+      case "discount":
+        sortOptions = { discount: -1 };
+        break;
+      case "created_at":
+        sortOptions = { date: -1 };
+        break;
+      case "priceAsc":
+        sortOptions = { priceAsDouble: 1 };
+        break;
+      case "priceDesc":
+        sortOptions = { priceAsDouble: -1 };
+        break;
+      default:
+        break; // If none of the cases match, the default sortOptions will be used
+    }
+
+    const products = await Product.aggregate([
+      {
+        $match: {
+          title: { $regex: searchQuery, $options: "i" },
+        },
+      },
+      {
+        $addFields: {
+          priceAsDouble: { $toDouble: "$price" },
+        },
+      },
+      { $sort: sortOptions },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
+      {
+        $lookup: {
+          from: "colors",
+          localField: "color",
+          foreignField: "_id",
+          as: "color",
+        },
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "categories",
+          foreignField: "_id",
+          as: "categories",
+        },
+      },
+      {
+        $lookup: {
+          from: "attributes",
+          localField: "attributes",
+          foreignField: "_id",
+          as: "attributes",
+        },
+      },
+      {
+        $lookup: {
+          from: "stickers",
+          localField: "stickers",
+          foreignField: "_id",
+          as: "stickers",
+        },
+      },
+      {
+        $lookup: {
+          from: "meta_data",
+          localField: "meta_data",
+          foreignField: "_id",
+          as: "meta_data",
+        },
+      },
+    ]);
 
     // Count total products for pagination
     const totalProducts = await Product.countDocuments({
@@ -227,6 +295,9 @@ exports.searchProducts = async (req, res) => {
 exports.getSearchFilterOptions = async (req, res) => {
   try {
     const searchQuery = req.query.query;
+    console.log("Received search query:", searchQuery);
+
+    console.log("Full request query:", req.query);
 
     if (!searchQuery) {
       return res.status(400).send({ error: "Search query is required." });
@@ -246,10 +317,13 @@ exports.getSearchFilterOptions = async (req, res) => {
         },
       });
 
-    // Ensure products is not undefined or empty
+    // Check if products are found
     if (!products || products.length === 0) {
+      console.log("No products found matching the query:", searchQuery);
       return res.status(404).send({ error: "No products found for this search query." });
     }
+
+    console.log(`Found ${products.length} products for query "${searchQuery}"`);
 
     // Aggregate price range
     const prices = products.map((product) => parseFloat(product.price)).filter((price) => !isNaN(price));
@@ -269,13 +343,10 @@ exports.getSearchFilterOptions = async (req, res) => {
     // Aggregate unique attributes
     const attributeItemMap = {};
     products.forEach((product, productIndex) => {
-      // Ensure product.attributes exists and is an array
       if (product.attributes && Array.isArray(product.attributes)) {
         product.attributes.forEach((attribute, attributeIndex) => {
-          // Check if attribute.items exists and is an array
           if (attribute.items && Array.isArray(attribute.items)) {
             attribute.items.forEach((item) => {
-              // Group by item.code
               if (!attributeItemMap[item.code]) {
                 attributeItemMap[item.code] = {
                   title: item.title,
@@ -308,6 +379,7 @@ exports.getSearchFilterOptions = async (req, res) => {
       attributes: groupedAttributes,
     });
   } catch (error) {
+    console.error("Error during filter option aggregation:", error);
     res.status(500).send({ error: error.message });
   }
 };

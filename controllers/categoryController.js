@@ -198,7 +198,7 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
     }
 
     // Initialize sort options
-    let sortOptions = {};
+    let sortOptions = { view_count: -1 };
     switch (req.query.sorting) {
       case "popular":
         sortOptions = { view_count: -1 };
@@ -234,7 +234,7 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
       },
       {
         $addFields: {
-          priceAsDouble: { $toDouble: "$price" }, // Convert price to double
+          priceAsDouble: { $toDouble: "$price" },
         },
       },
       { $sort: sortOptions },
