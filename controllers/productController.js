@@ -1,6 +1,9 @@
 const slugify = require("slugify");
 const Product = require("../models/product");
 const Category = require("../models/category");
+const Color = require("../models/color");
+const AttributeItem = require("../models/attributeItem");
+const Attributes = require("../models/attributes");
 
 // Create a new Product
 exports.createProduct = async (req, res) => {
@@ -200,13 +203,81 @@ exports.searchProducts = async (req, res) => {
         sortOptions = { priceAsDouble: -1 };
         break;
       default:
-        break; // If none of the cases match, the default sortOptions will be used
+        break;
     }
 
+    // Price filters
+    const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : 0;
+    const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : Infinity;
+
+    const priceFilter = {
+      $expr: {
+        $and: [{ $gte: [{ $toDouble: "$price" }, minPrice] }, { $lte: [{ $toDouble: "$price" }, maxPrice] }],
+      },
+    };
+
+    // Color filters
+    const colorCodes = req.query.colors ? req.query.colors.split(",").filter(Boolean) : [];
+    let colorFilter = {};
+    if (colorCodes.length > 0) {
+      const colors = await Color.find({ code: { $in: colorCodes } });
+      if (colors.length > 0) {
+        const colorIds = colors.map((color) => color._id);
+        colorFilter = { color: { $in: colorIds } };
+      }
+    }
+
+    // Attribute filters
+    let attributeFilters = {};
+    Object.keys(req.query).forEach((key) => {
+      if (!["page", "limit", "minPrice", "maxPrice", "colors", "sorting"].includes(key)) {
+        const value = req.query[key];
+        if (typeof value === "string") {
+          attributeFilters[key] = value.split(",");
+        } else if (Array.isArray(value)) {
+          attributeFilters[key] = value;
+        }
+      }
+    });
+
+    let attributeConditions = [];
+    if (Object.keys(attributeFilters).length > 0) {
+      for (const [attributeCode, values] of Object.entries(attributeFilters)) {
+        const matchingItems = await AttributeItem.find({
+          code: attributeCode,
+          attribute_values: { $in: values },
+          is_active: true,
+        });
+
+        if (matchingItems.length > 0) {
+          const attributeItemIds = matchingItems.map((item) => item._id);
+
+          const matchingAttributes = await Attributes.find({
+            items: { $in: attributeItemIds },
+          });
+
+          if (matchingAttributes.length > 0) {
+            const attributeIds = matchingAttributes.map((attr) => attr._id);
+            attributeConditions.push({ attributes: { $in: attributeIds } });
+          }
+        }
+      }
+    }
+
+    let attributeFilter = {};
+    if (attributeConditions.length > 0) {
+      attributeFilter = { $and: attributeConditions };
+    }
+
+    // Aggregation pipeline with all filters
     const products = await Product.aggregate([
       {
         $match: {
           title: { $regex: searchQuery, $options: "i" },
+          is_enabled: true,
+          ...priceFilter,
+          ...colorFilter,
+          ...attributeFilter,
         },
       },
       {
@@ -215,12 +286,8 @@ exports.searchProducts = async (req, res) => {
         },
       },
       { $sort: sortOptions },
-      {
-        $skip: skip,
-      },
-      {
-        $limit: limit,
-      },
+      { $skip: skip },
+      { $limit: limit },
       {
         $lookup: {
           from: "colors",
@@ -266,6 +333,10 @@ exports.searchProducts = async (req, res) => {
     // Count total products for pagination
     const totalProducts = await Product.countDocuments({
       title: { $regex: searchQuery, $options: "i" },
+      is_enabled: true,
+      ...priceFilter,
+      ...colorFilter,
+      ...attributeFilter,
     });
 
     const totalPages = Math.ceil(totalProducts / limit);
