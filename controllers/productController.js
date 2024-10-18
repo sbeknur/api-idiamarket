@@ -470,3 +470,46 @@ exports.deleteProductById = async (req, res) => {
     res.status(500).send({ error: error.message });
   }
 };
+
+exports.getProductsBySku = async (req, res) => {
+  try {
+    const skus = req.query.skus ? req.query.skus.split(",") : [];
+
+    if (!skus.length) {
+      return res.status(400).send({ error: "At least one SKU is required." });
+    }
+
+    const products = await Product.find({ sku: { $in: skus } })
+      .populate("color")
+      .populate("categories")
+      .populate("short_description")
+      .populate({
+        path: "attributes",
+        populate: { path: "items", model: "AttributeItem" },
+      })
+      .populate({
+        path: "variants",
+        populate: [
+          {
+            path: "attributes",
+            populate: { path: "attribute", model: "AttributeItem" },
+          },
+          {
+            path: "colors",
+            populate: { path: "color", model: "Color" },
+          },
+        ],
+      })
+      .populate("stickers")
+      .populate("meta_data");
+
+    if (!products.length) {
+      return res.status(404).send({ error: "No products found for the provided SKUs." });
+    }
+
+    res.send(products);
+  } catch (error) {
+    console.error("Error fetching products by SKU:", error);
+    res.status(500).send({ error: error.message });
+  }
+};

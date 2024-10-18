@@ -151,6 +151,10 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
         model: "Category",
       })
       .populate({
+        path: "anchors",
+        model: "Anchor",
+      })
+      .populate({
         path: "meta_data",
         model: "SeoMetadata",
       });

@@ -31,6 +31,12 @@ const categorySchema = new mongoose.Schema({
   image: {
     type: String,
   },
+  anchors: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Anchor",
+    },
+  ],
   meta_data: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "MetaData",

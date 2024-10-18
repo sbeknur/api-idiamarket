@@ -27,6 +27,7 @@ app.use("/api", require("./routes/seoMetadataRoutes"));
 app.use("/api", require("./routes/attributeItemRoutes"));
 app.use("/api", require("./routes/attributesRoutes"));
 app.use("/api", require("./routes/descriptionRoutes"));
+app.use("/api", require("./routes/anchorRoutes"));
 
 // Start the server
 const PORT = process.env.PORT || 8080;
