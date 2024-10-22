@@ -128,19 +128,27 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 10;
     const skip = (page - 1) * limit;
 
-    const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : 0;
-    const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : Infinity;
+    const minPrice = req.query.minPrice ? parseFloat(Array.isArray(req.query.minPrice) ? req.query.minPrice[0] : req.query.minPrice) : 0;
+    const maxPrice = req.query.maxPrice ? parseFloat(Array.isArray(req.query.maxPrice) ? req.query.maxPrice[0] : req.query.maxPrice) : Infinity;
 
-    const colorCodes = req.query.colors ? req.query.colors.split(",").filter(Boolean) : [];
+    // Обработка цвета
+    let colorCodes = [];
+    if (req.query.colors) {
+      if (Array.isArray(req.query.colors)) {
+        colorCodes = req.query.colors;
+      } else {
+        colorCodes = req.query.colors.split(",").filter(Boolean);
+      }
+    }
 
     let attributeFilters = {};
     Object.keys(req.query).forEach((key) => {
       if (key !== "page" && key !== "limit" && key !== "minPrice" && key !== "maxPrice" && key !== "colors" && key !== "sort") {
         const value = req.query[key];
-        if (typeof value === "string") {
-          attributeFilters[key] = value.split(",");
-        } else if (Array.isArray(value)) {
+        if (Array.isArray(value)) {
           attributeFilters[key] = value;
+        } else {
+          attributeFilters[key] = [value];
         }
       }
     });
@@ -309,6 +317,7 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Error in getCategoryAndProductsByUri:", error);
     res.status(500).send({ error: error.message });
   }
 };
