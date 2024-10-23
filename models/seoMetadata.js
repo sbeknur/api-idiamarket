@@ -17,6 +17,9 @@ const seoMetadataSchema = new mongoose.Schema({
     type: JSON,
     default: "",
   },
+  faq: {
+    type: JSON,
+  },
 });
 
 module.exports = mongoose.model("SeoMetadata", seoMetadataSchema);

@@ -1,11 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const { createOrUpdateSeoMetadata, getAllSeoMetadata } = require("../controllers/seoMetadataController");
+const { createSeoMetadata, getAllSeoMetadata, updateSeoMetadata } = require("../controllers/seoMetadataController");
 
 // Create or update SEO metadata
-router.post("/seo-metadata", createOrUpdateSeoMetadata);
+router.post("/seo-metadata", createSeoMetadata);
 
 // Get all SEO metadata
 router.get("/seo-metadatas", getAllSeoMetadata);
+
+// Update or update SEO metadata
+router.put("/seo-metadata/:id", updateSeoMetadata);
 
 module.exports = router;
