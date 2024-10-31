@@ -60,3 +60,21 @@ exports.updateSeoMetadata = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Delete SEO metadata by ID
+exports.deleteSeoMetadata = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find the SEO metadata by ID and delete it
+    const seoMetadata = await SeoMetadata.findByIdAndDelete(id);
+
+    if (!seoMetadata) {
+      return res.status(404).json({ message: "SEO metadata not found" });
+    }
+
+    res.status(200).json({ message: "SEO metadata deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

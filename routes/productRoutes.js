@@ -32,6 +32,6 @@ router.get("/products/search/filters", getSearchFilterOptions);
 router.get("/products/sku", getProductsBySku);
 
 // Delete a Product by ID
-router.delete("product/:id", deleteProductById);
+router.delete("/product/:id", deleteProductById);
 
 module.exports = router;
