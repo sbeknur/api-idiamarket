@@ -41,6 +41,10 @@ const categorySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "MetaData",
   },
+  faq: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Faq",
+  },
 });
 
 module.exports = mongoose.model("Category", categorySchema);

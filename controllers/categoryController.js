@@ -4,7 +4,8 @@ const Product = require("../models/product");
 const Color = require("../models/color");
 const AttributeItem = require("../models/attributeItem");
 const Attributes = require("../models/attributes");
-const seoMetadata = require("../models/seoMetadata");
+const SeoMetadata = require("../models/seoMetadata");
+const Faq = require("../models/faq");
 
 // Create a new Category
 async function buildUri(parentId, slugifiedTitle) {
@@ -165,6 +166,10 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
       .populate({
         path: "meta_data",
         model: "SeoMetadata",
+      })
+      .populate({
+        path: "faq",
+        model: "Faq",
       });
 
     if (!category) {
@@ -290,6 +295,14 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
           localField: "meta_data",
           foreignField: "_id",
           as: "meta_data",
+        },
+      },
+      {
+        $lookup: {
+          from: "faq",
+          localField: "faq",
+          foreignField: "_id",
+          as: "faq",
         },
       },
     ]);
