@@ -5,11 +5,12 @@ const AttributeItem = require("../models/attributeItem");
 exports.createAttributeItem = async (req, res) => {
   try {
     const slugifiedTitle = slugify(req.body.title, { lower: true, strict: true });
+    const slugifiedValue = slugify(req.body.value, { lower: true, strict: true });
 
     const attributeItem = new AttributeItem({
       ...req.body,
       code: slugifiedTitle,
-      attribute_values: req.body.value,
+      attribute_values: slugifiedValue,
     });
 
     await attributeItem.save();
@@ -19,7 +20,6 @@ exports.createAttributeItem = async (req, res) => {
     res.status(400).send({ error: error.message });
   }
 };
-
 // Get all attribute items
 exports.getAllAttributeItems = async (req, res) => {
   try {
@@ -41,7 +41,7 @@ exports.updateAttributeItem = async (req, res) => {
     }
 
     if (updateData.value) {
-      updateData.attribute_values = updateData.value;
+      updateData.attribute_values = slugify(updateData.value, { lower: true, strict: true });
     }
 
     const attributeItem = await AttributeItem.findByIdAndUpdate(attributeItemId, updateData, { new: true, runValidators: true });

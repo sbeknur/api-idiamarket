@@ -5,6 +5,9 @@ const attributeItemSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  seo_title: {
+    type: String,
+  },
   code: {
     type: String,
     required: true,

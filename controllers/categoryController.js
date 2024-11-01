@@ -389,17 +389,19 @@ exports.getCategoryFilterOptions = async (req, res) => {
         product.attributes.forEach((attribute, attributeIndex) => {
           // Check if attribute.items exists and is an array
           if (attribute.items && Array.isArray(attribute.items)) {
-            attribute.items.forEach((item) => {
-              // Group by item.code
-              if (!attributeItemMap[item.code]) {
-                attributeItemMap[item.code] = {
-                  title: item.title,
-                  display_type: item.display_type,
-                  values: new Set(),
-                };
-              }
-              attributeItemMap[item.code].values.add(item.value);
-            });
+            attribute.items
+              .filter((item) => item.is_active === true)
+              .forEach((item) => {
+                // Group by item.code
+                if (!attributeItemMap[item.code]) {
+                  attributeItemMap[item.code] = {
+                    title: item.title,
+                    display_type: item.display_type,
+                    values: new Set(),
+                  };
+                }
+                attributeItemMap[item.code].values.add(item.value);
+              });
           } else {
             console.warn(`Attribute items are undefined or not an array for productIndex ${productIndex}, attributeIndex ${attributeIndex}`);
           }
