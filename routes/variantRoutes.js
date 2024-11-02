@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { createVariant, getAllVariants, updateVariantById, deleteVariantById } = require("../controllers/variantController");
+const {
+  createVariant,
+  getAllVariants,
+  updateVariantById,
+  deleteVariantById,
+} = require("../controllers/variantController");
 
 // Create a new variant
 router.post("/variant", createVariant);

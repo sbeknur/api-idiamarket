@@ -1,6 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { createAttributes, getAllAttributes, getAttributeById, updateAttributeById, deleteAttributeById } = require("../controllers/attributesController");
+const {
+  createAttributes,
+  getAllAttributes,
+  getAttributeById,
+  updateAttributeById,
+  deleteAttributeById,
+} = require("../controllers/attributesController");
 
 // Create a new attribute
 router.post("/attribute", createAttributes);

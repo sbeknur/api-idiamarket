@@ -1,6 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const { createProduct, getProductByUri, getAllProducts, getPopularProducts, updateProductById, getDayProducts, searchProducts, deleteProductById, updateProductBySku, getSearchFilterOptions, getProductsBySku } = require("../controllers/productController");
+const {
+  createProduct,
+  getProductByUri,
+  getAllProducts,
+  getPopularProducts,
+  updateProductById,
+  getDayProducts,
+  searchProducts,
+  deleteProductById,
+  updateProductBySku,
+  getSearchFilterOptions,
+  getProductsBySku,
+} = require("../controllers/productController");
 
 // Create a new Product
 router.post("/product", createProduct);

@@ -2,7 +2,12 @@
 
 const express = require("express");
 const router = express.Router();
-const { createDescription, getAllDescriptions, getDescription, updateDescription } = require("../controllers/descriptionController");
+const {
+  createDescription,
+  getAllDescriptions,
+  getDescription,
+  updateDescription,
+} = require("../controllers/descriptionController");
 
 // POST /api/descriptions - создание нового описания
 router.post("/descriptions", createDescription);

@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { createShortDescription, getAllShortDescriptions, updateShortDescription } = require("../controllers/shortDescriptionController");
+const {
+  createShortDescription,
+  getAllShortDescriptions,
+  updateShortDescription,
+} = require("../controllers/shortDescriptionController");
 
 // Create a new short description
 router.post("/short-description", createShortDescription);

@@ -1,6 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const { createCategory, getCategoryById, getAllCategories, updateCategory, deleteCategory, getCategoryAndProductsByCategoryCode, getCategoryFilterOptions, countProductsByCategoryCodes, getBreadcrumbs } = require("../controllers/categoryController");
+const {
+  createCategory,
+  getCategoryById,
+  getAllCategories,
+  updateCategory,
+  deleteCategory,
+  getCategoryAndProductsByCategoryCode,
+  getCategoryFilterOptions,
+  countProductsByCategoryCodes,
+  getBreadcrumbs,
+} = require("../controllers/categoryController");
 
 // Create a new Category
 router.post("/category", createCategory);
