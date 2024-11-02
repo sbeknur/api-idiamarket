@@ -191,7 +191,6 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
         const matchingItems = await AttributeItem.find({
           code: attributeCode,
           attribute_values: { $in: values },
-          is_active: true,
         });
 
         if (matchingItems.length > 0) {
