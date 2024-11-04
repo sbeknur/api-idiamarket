@@ -5,8 +5,13 @@ const attributeItemSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  seo_title: {
-    type: String,
+  seo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "SeoMetadata",
+  },
+  faq: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Faq",
   },
   code: {
     type: String,

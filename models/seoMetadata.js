@@ -9,7 +9,11 @@ const seoMetadataSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
-  meta_header: {
+  page_title: {
+    type: String,
+    default: "",
+  },
+  seo_header: {
     type: String,
     default: "",
   },

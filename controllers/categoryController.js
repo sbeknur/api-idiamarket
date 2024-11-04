@@ -191,7 +191,38 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
         const matchingItems = await AttributeItem.find({
           code: attributeCode,
           attribute_values: { $in: values },
-        });
+        })
+          .populate({
+            path: "seo",
+            model: "SeoMetadata",
+          })
+          .populate({
+            path: "faq",
+            model: "Faq",
+          });
+
+        if (matchingItems.length === 1) {
+          if (matchingItems[0].seo) {
+            const seoData = {
+              meta_title: matchingItems[0].seo.meta_title,
+              meta_description: matchingItems[0].seo.meta_description,
+              page_title: matchingItems[0].seo.page_title,
+              seo_header: matchingItems[0].seo.seo_header,
+              seo_text: matchingItems[0].seo.seo_text,
+            };
+            category.meta_data = seoData;
+
+            if (matchingItems[0].faq) {
+              const faq = {
+                title: matchingItems[0].faq.title,
+                list: matchingItems[0].faq.list,
+              };
+              category.faq = faq;
+            } else {
+              category.faq = null;
+            }
+          }
+        }
 
         if (matchingItems.length > 0) {
           const attributeItemIds = matchingItems.map((item) => item._id);

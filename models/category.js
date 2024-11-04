@@ -39,7 +39,7 @@ const categorySchema = new mongoose.Schema({
   ],
   meta_data: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "MetaData",
+    ref: "SeoMetadata",
   },
   faq: {
     type: mongoose.Schema.Types.ObjectId,
