@@ -431,10 +431,11 @@ exports.getSearchFilterOptions = async (req, res) => {
                   attributeItemMap[item.code] = {
                     title: item.title,
                     display_type: item.display_type,
-                    values: new Set(),
+                    priority: item.priority,
+                    values: new Map(),
                   };
                 }
-                attributeItemMap[item.code].values.add(item.value);
+                attributeItemMap[item.code].values.set(item.value, { title: item.value, code: item.attribute_values });
               });
           } else {
             console.warn(`Attribute items are undefined or not an array for productIndex ${productIndex}, attributeIndex ${attributeIndex}`);
@@ -445,12 +446,15 @@ exports.getSearchFilterOptions = async (req, res) => {
       }
     });
 
-    const groupedAttributes = Object.keys(attributeItemMap).map((code) => ({
-      code,
-      title: attributeItemMap[code].title,
-      display_type: attributeItemMap[code].display_type,
-      values: Array.from(attributeItemMap[code].values),
-    }));
+    const groupedAttributes = Object.keys(attributeItemMap)
+      .map((code) => ({
+        code,
+        title: attributeItemMap[code].title,
+        display_type: attributeItemMap[code].display_type,
+        priority: attributeItemMap[code].priority,
+        values: Array.from(attributeItemMap[code].values.values()),
+      }))
+      .sort((a, b) => b.priority - a.priority);
 
     // Send response with filter options
     res.send({
