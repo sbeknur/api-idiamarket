@@ -41,6 +41,12 @@ const attributeItemSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  priority: {
+    type: Number,
+    min: 0,
+    max: 1,
+    default: 0.5,
+  },
 });
 
 module.exports = mongoose.model("AttributeItem", attributeItemSchema);

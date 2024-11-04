@@ -3,12 +3,13 @@ const SeoMetadata = require("../models/seoMetadata");
 // Create SEO metadata
 exports.createSeoMetadata = async (req, res) => {
   try {
-    const { meta_title, meta_description, meta_header, seo_text } = req.body;
+    const { meta_title, meta_description, page_title, seo_header, seo_text } = req.body;
 
     const seoMetadata = new SeoMetadata({
       meta_title,
       meta_description,
-      meta_header,
+      page_title,
+      seo_header,
       seo_text,
     });
 
@@ -37,7 +38,7 @@ exports.getAllSeoMetadata = async (req, res) => {
 exports.updateSeoMetadata = async (req, res) => {
   try {
     const { id } = req.params; // Assuming the ID is passed as a URL parameter
-    const { meta_title, meta_description, meta_header, seo_text } = req.body;
+    const { meta_title, meta_description, page_title, seo_header, seo_text } = req.body;
 
     // Find the SEO metadata by ID
     const seoMetadata = await SeoMetadata.findById(id);
@@ -49,7 +50,8 @@ exports.updateSeoMetadata = async (req, res) => {
     // Update fields if they are provided in the request body
     if (meta_title !== undefined) seoMetadata.meta_title = meta_title;
     if (meta_description !== undefined) seoMetadata.meta_description = meta_description;
-    if (meta_header !== undefined) seoMetadata.meta_header = meta_header;
+    if (page_title !== undefined) seoMetadata.page_title = page_title;
+    if (seo_header !== undefined) seoMetadata.seo_header = seo_header;
     if (seo_text !== undefined) seoMetadata.seo_text = seo_text;
 
     // Save the updated document

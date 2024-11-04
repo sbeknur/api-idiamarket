@@ -8,7 +8,7 @@ exports.createAttributeItem = async (req, res) => {
     const slugifiedValue = slugify(req.body.value, { lower: true, strict: true });
 
     const attributeItem = new AttributeItem({
-      ...req.body,
+      ...req.body, // This will include new fields like `seo`, `faq`, `is_active`, etc.
       code: slugifiedTitle,
       attribute_values: slugifiedValue,
     });
@@ -20,10 +20,11 @@ exports.createAttributeItem = async (req, res) => {
     res.status(400).send({ error: error.message });
   }
 };
+
 // Get all attribute items
 exports.getAllAttributeItems = async (req, res) => {
   try {
-    const attributeItems = await AttributeItem.find({});
+    const attributeItems = await AttributeItem.find({}).populate("seo").populate("faq"); // Populating references
     res.status(200).send(attributeItems);
   } catch (error) {
     res.status(500).send({ error: error.message });
@@ -44,7 +45,10 @@ exports.updateAttributeItem = async (req, res) => {
       updateData.attribute_values = slugify(updateData.value, { lower: true, strict: true });
     }
 
-    const attributeItem = await AttributeItem.findByIdAndUpdate(attributeItemId, updateData, { new: true, runValidators: true });
+    const attributeItem = await AttributeItem.findByIdAndUpdate(attributeItemId, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!attributeItem) {
       return res.status(404).send({ error: "Attribute item not found" });
