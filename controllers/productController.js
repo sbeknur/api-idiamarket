@@ -425,7 +425,7 @@ exports.getSearchFilterOptions = async (req, res) => {
         product.attributes.forEach((attribute, attributeIndex) => {
           if (attribute.items && Array.isArray(attribute.items)) {
             attribute.items
-              .filter((item) => item.is_active === true)
+              .filter((item) => item.display_type)
               .forEach((item) => {
                 if (!attributeItemMap[item.code]) {
                   attributeItemMap[item.code] = {

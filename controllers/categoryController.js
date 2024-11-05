@@ -420,7 +420,7 @@ exports.getCategoryFilterOptions = async (req, res) => {
           // Check if attribute.items exists and is an array
           if (attribute.items && Array.isArray(attribute.items)) {
             attribute.items
-              .filter((item) => item.is_active === true)
+              .filter((item) => item.display_type)
               .forEach((item) => {
                 // Group by item.code
                 if (!attributeItemMap[item.code]) {
