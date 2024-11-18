@@ -289,24 +289,26 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
       { $limit: limit },
       {
         $lookup: {
-          from: "attributes",
-          localField: "attributes",
+          from: "colors",
+          localField: "color",
           foreignField: "_id",
-          as: "attributes",
-        },
-      },
-      {
-        $unwind: {
-          path: "$attributes",
-          preserveNullAndEmptyArrays: true,
+          as: "color",
         },
       },
       {
         $lookup: {
-          from: "attributeitems",
-          localField: "attributes.items",
+          from: "categories",
+          localField: "categories",
           foreignField: "_id",
-          as: "attributes.items",
+          as: "categories",
+        },
+      },
+      {
+        $lookup: {
+          from: "attributes",
+          localField: "attributes",
+          foreignField: "_id",
+          as: "attributes",
         },
       },
       {
@@ -315,6 +317,22 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
           localField: "stickers",
           foreignField: "_id",
           as: "stickers",
+        },
+      },
+      {
+        $lookup: {
+          from: "meta_data",
+          localField: "meta_data",
+          foreignField: "_id",
+          as: "meta_data",
+        },
+      },
+      {
+        $lookup: {
+          from: "faq",
+          localField: "faq",
+          foreignField: "_id",
+          as: "faq",
         },
       },
     ]);
