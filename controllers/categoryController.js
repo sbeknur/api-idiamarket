@@ -24,35 +24,6 @@ async function buildUri(parentId, slugifiedTitle) {
   return `${parentUri}/${slugifiedTitle}`;
 }
 
-exports.createCategory = async (req, res) => {
-  try {
-    const slugifiedTitle = slugify(req.body.title, { lower: true, strict: true });
-    let categoryUri = slugifiedTitle;
-
-    if (req.body.parent) {
-      categoryUri = await buildUri(req.body.parent, slugifiedTitle);
-    }
-
-    const category = new Category({
-      ...req.body,
-      category_code: slugifiedTitle,
-      uri: categoryUri,
-    });
-
-    await category.save();
-
-    if (req.body.parent) {
-      await Category.findByIdAndUpdate(req.body.parent, {
-        $push: { children: category._id },
-      });
-    }
-
-    res.status(201).send(category);
-  } catch (error) {
-    res.status(400).send({ error: error.message });
-  }
-};
-
 // Get all Categories
 exports.getAllCategories = async (req, res) => {
   try {
@@ -78,48 +49,6 @@ exports.getCategoryById = async (req, res) => {
   }
 };
 
-// Update a Category by ID
-exports.updateCategory = async (req, res) => {
-  try {
-    const updates = req.body;
-
-    // If title is being updated, regenerate category_code
-    if (updates.title) {
-      updates.category_code = slugify(updates.title, { lower: true, strict: true });
-    }
-
-    const category = await Category.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
-
-    if (!category) {
-      return res.status(404).send({ error: "Category not found" });
-    }
-
-    res.send(category);
-  } catch (error) {
-    res.status(400).send(error);
-  }
-};
-
-// Delete a Category by ID
-exports.deleteCategory = async (req, res) => {
-  try {
-    const category = await Category.findByIdAndDelete(req.params.id);
-
-    if (!category) {
-      return res.status(404).send({ error: "Category not found" });
-    }
-
-    if (category.parent) {
-      await Category.findByIdAndUpdate(category.parent, {
-        $pull: { children: category._id },
-      });
-    }
-
-    res.send({ message: "Category deleted successfully" });
-  } catch (error) {
-    res.status(500).send({ error: error.message });
-  }
-};
 
 // Get Products by Category Code with Attribute Filters
 exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
@@ -289,26 +218,24 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
       { $limit: limit },
       {
         $lookup: {
-          from: "colors",
-          localField: "color",
-          foreignField: "_id",
-          as: "color",
-        },
-      },
-      {
-        $lookup: {
-          from: "categories",
-          localField: "categories",
-          foreignField: "_id",
-          as: "categories",
-        },
-      },
-      {
-        $lookup: {
           from: "attributes",
           localField: "attributes",
           foreignField: "_id",
           as: "attributes",
+        },
+      },
+      {
+        $unwind: {
+          path: "$attributes",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "attributeitems",
+          localField: "attributes.items",
+          foreignField: "_id",
+          as: "attributes.items",
         },
       },
       {
@@ -317,22 +244,6 @@ exports.getCategoryAndProductsByCategoryCode = async (req, res) => {
           localField: "stickers",
           foreignField: "_id",
           as: "stickers",
-        },
-      },
-      {
-        $lookup: {
-          from: "meta_data",
-          localField: "meta_data",
-          foreignField: "_id",
-          as: "meta_data",
-        },
-      },
-      {
-        $lookup: {
-          from: "faq",
-          localField: "faq",
-          foreignField: "_id",
-          as: "faq",
         },
       },
     ]);
