@@ -33,6 +33,56 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
+// Update a Product by ID
+exports.updateProductById = async (req, res) => {
+  try {
+    const productId = req.params.id;
+
+    // If title or SKU is being updated, regenerate the `uri`
+    let updatedData = { ...req.body };
+    if (req.body.title || req.body.sku) {
+      const slugifiedTitle = slugify(req.body.title || req.body.originalTitle, { lower: true, strict: true });
+      const productUri = `${slugifiedTitle}-${req.body.sku || req.body.originalSku}`;
+      updatedData.uri = productUri;
+    }
+
+    const product = await Product.findByIdAndUpdate(productId, updatedData, { new: true, runValidators: true });
+
+    if (!product) {
+      return res.status(404).send({ error: error.message });
+    }
+
+    res.send(product);
+  } catch (error) {
+    res.status(400).send({ error: error.message });
+  }
+};
+
+// Update a Product by SKU
+exports.updateProductBySku = async (req, res) => {
+  try {
+    const productSku = req.params.sku;
+
+    // If title is being updated, regenerate the `uri`
+    let updatedData = { ...req.body };
+    if (req.body.title) {
+      const slugifiedTitle = slugify(req.body.title, { lower: true, strict: true });
+      const productUri = `${slugifiedTitle}-${productSku}`;
+      updatedData.uri = productUri;
+    }
+
+    const product = await Product.findOneAndUpdate({ sku: productSku }, updatedData, { new: true, runValidators: true });
+
+    if (!product) {
+      return res.status(404).send({ error: "Product not found" });
+    }
+
+    res.send(product);
+  } catch (error) {
+    res.status(400).send({ error: error.message });
+  }
+};
+
 // Get a single Product by URI
 exports.getProductByUri = async (req, res) => {
   try {
@@ -415,5 +465,98 @@ exports.getSearchFilterOptions = async (req, res) => {
   } catch (error) {
     console.error("Error during filter option aggregation:", error);
     res.status(500).send({ error: error.message });
+  }
+};
+
+// Delete a Product by ID
+exports.deleteProductById = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findByIdAndDelete(productId);
+
+    if (!product) {
+      return res.status(404).send({ error: "Product not found" });
+    }
+
+    res.send({ message: "Product deleted successfully" });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+};
+
+exports.getProductsBySku = async (req, res) => {
+  try {
+    const skus = req.query.skus ? req.query.skus.split(",") : [];
+
+    if (!skus.length) {
+      return res.status(400).send({ error: "At least one SKU is required." });
+    }
+
+    const products = await Product.find({ sku: { $in: skus } })
+      .populate("color")
+      .populate("categories")
+      .populate("short_description")
+      .populate({
+        path: "attributes",
+        populate: { path: "items", model: "AttributeItem" },
+      })
+      .populate({
+        path: "variants",
+        populate: [
+          {
+            path: "attributes",
+            populate: { path: "attribute", model: "AttributeItem" },
+          },
+          {
+            path: "colors",
+            populate: { path: "color", model: "Color" },
+          },
+        ],
+      })
+      .populate("stickers")
+      .populate("meta_data");
+
+    if (!products.length) {
+      return res.status(404).send({ error: "No products found for the provided SKUs." });
+    }
+
+    res.send(products);
+  } catch (error) {
+    console.error("Error fetching products by SKU:", error);
+    res.status(500).send({ error: error.message });
+  }
+};
+
+exports.updateAllProducts = async (req, res) => {
+  try {
+    const updateData = req.body;
+    const result = await Product.updateMany({}, updateData);
+    res.status(200).json({
+      success: true,
+      message: "All products updated successfully",
+      result,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.updateProductsBySkus = async (req, res) => {
+  try {
+    const { skus, updateData } = req.body;
+
+    if (!Array.isArray(skus) || skus.length === 0) {
+      return res.status(400).json({ success: false, message: "SKUs list is required" });
+    }
+
+    const result = await Product.updateMany({ sku: { $in: skus } }, { $set: updateData });
+
+    res.status(200).json({
+      success: true,
+      message: `${result.modifiedCount} products updated successfully`,
+      result,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
